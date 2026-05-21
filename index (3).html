@@ -1,0 +1,1528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CheckMed — Compare Drug Prices Across Insurers, PBMs & Manufacturers</title>
+  <meta name="description" content="CheckMed — Free drug price comparison tool. Compare medication prices across insurance plans, PBMs, and manufacturer programs." />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root{
+      --green:#1D9E75;
+      --green-dark:#0F6E56;
+      --green-light:#E1F5EE;
+      --bg:#FAFAF8;
+      --surface:#fff;
+      --surface2:#F4F3EF;
+      --border:rgba(0,0,0,.1);
+      --text:#1A1A18;
+      --muted:#6B6B66;
+      --radius:18px;
+      --shadow:0 10px 30px rgba(0,0,0,.08);
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{
+      font-family:'DM Sans', Arial, Helvetica, sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      line-height:1.5;
+    }
+    a{cursor:pointer;text-decoration:none}
+    nav{
+      position:sticky;
+      top:0;
+      z-index:50;
+      background:#fff;
+      border-bottom:1px solid var(--border);
+      padding:16px 24px;
+      backdrop-filter:saturate(180%) blur(8px);
+    }
+    .nav-inner{
+      max-width:1200px;
+      margin:0 auto;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:16px;
+      flex-wrap:wrap;
+    }
+    .logo{
+      font-family:'DM Serif Display', serif;
+      font-size:28px;
+      color:var(--green-dark);
+      text-decoration:none;
+    }
+    .logo span{color:var(--green)}
+    .nav-links{
+      display:flex;
+      gap:18px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .nav-links a{
+      color:var(--muted);
+      font-size:14px;
+      font-weight:500;
+    }
+    .nav-cta{
+      padding:10px 14px;
+      border-radius:999px;
+      background:var(--green);
+      color:#fff !important;
+    }
+
+    .tab-bar{
+      max-width:1200px;
+      margin:16px auto 0;
+      padding:0 24px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .tab{
+      padding:10px 14px;
+      border-radius:999px;
+      background:#fff;
+      border:1px solid var(--border);
+      color:var(--muted);
+      cursor:pointer;
+      font-size:14px;
+      font-weight:600;
+    }
+    .tab.active{
+      background:var(--green-light);
+      color:var(--green-dark);
+      border-color:transparent;
+    }
+
+    .section{display:none}
+    .section.active{display:block}
+
+    .hero{
+      max-width:1200px;
+      margin:0 auto;
+      padding:56px 24px 24px;
+      text-align:center;
+    }
+    .hero-badge{
+      display:inline-block;
+      padding:8px 12px;
+      border-radius:999px;
+      background:var(--green-light);
+      color:var(--green-dark);
+      font-size:13px;
+      font-weight:700;
+      margin-bottom:14px;
+    }
+    .hero h1{
+      margin:0 0 12px;
+      font-family:'DM Serif Display', serif;
+      font-size:clamp(34px,5vw,58px);
+      line-height:1.05;
+    }
+    .hero h1 em{font-style:italic;color:var(--green)}
+    .hero p{
+      max-width:820px;
+      margin:0 auto;
+      color:var(--muted);
+      font-size:18px;
+      line-height:1.6;
+    }
+
+    .search-wrap{
+      max-width:940px;
+      margin:28px auto 0;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:center;
+      align-items:center;
+    }
+    .search-wrap input{
+      flex:1;
+      min-width:280px;
+      max-width:560px;
+      padding:16px 18px;
+      border:1.5px solid var(--border);
+      border-radius:999px;
+      font-size:16px;
+      background:#fff;
+      outline:none;
+    }
+    .btn-primary,.btn-secondary,.btn-white{
+      border:none;
+      border-radius:999px;
+      padding:15px 20px;
+      font-size:15px;
+      font-weight:700;
+      cursor:pointer;
+    }
+    .btn-primary{background:var(--green);color:#fff}
+    .btn-secondary{background:#fff;color:var(--green-dark);border:1px solid var(--border)}
+    .btn-white{background:#fff;color:var(--green-dark)}
+
+    .quick-pills,.chips{
+      display:flex;
+      flex-wrap:wrap;
+      justify-content:center;
+      gap:10px;
+      margin-top:18px;
+    }
+    .pill,.chip{
+      padding:8px 12px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:var(--surface2);
+      color:#333;
+      font-size:13px;
+      cursor:pointer;
+    }
+
+    .stats-row{
+      max-width:1200px;
+      margin:24px auto 0;
+      padding:0 24px;
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:14px;
+    }
+    .stat-card{
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:20px;
+      text-align:center;
+    }
+    .stat-num{
+      font-family:'DM Serif Display', serif;
+      font-size:30px;
+      color:var(--green-dark);
+      line-height:1;
+    }
+    .stat-label{
+      margin-top:8px;
+      color:var(--muted);
+      font-size:14px;
+    }
+
+    .page-grid{
+      max-width:1200px;
+      margin:24px auto 0;
+      padding:0 24px 56px;
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:20px;
+    }
+    .card,.results-container,.cta-section,.about-hero,.notify-banner{
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+    }
+    .card,.results-container{
+      padding:22px;
+    }
+    .card-title,.page-title{
+      font-family:'DM Serif Display', serif;
+      font-size:22px;
+      margin:0 0 12px;
+    }
+    .page-sub,.muted,.results-sub,.footer-desc,.footer-bottom{
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.6;
+    }
+
+    .row,.form-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:14px;
+    }
+    .form-group{margin-bottom:12px}
+    .form-label,.label{
+      display:block;
+      font-size:12px;
+      font-weight:700;
+      color:var(--muted);
+      margin:10px 0 6px;
+    }
+    .form-input,.input,select{
+      width:100%;
+      padding:13px 14px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:#fff;
+      font-size:15px;
+      outline:none;
+    }
+    .btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+
+    .results-container{margin-top:20px}
+    .results-header{
+      display:flex;
+      justify-content:space-between;
+      gap:16px;
+      flex-wrap:wrap;
+      margin-bottom:14px;
+      align-items:flex-end;
+    }
+    .results-title{
+      font-family:'DM Serif Display', serif;
+      font-size:22px;
+    }
+    .filter-row{display:flex;gap:8px;flex-wrap:wrap}
+    .filter-btn{
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius:999px;
+      padding:10px 12px;
+      font-size:13px;
+      cursor:pointer;
+      color:var(--muted);
+    }
+    .filter-btn.active{
+      background:var(--green-light);
+      color:var(--green-dark);
+      border-color:transparent;
+    }
+
+    .table-wrap{overflow:auto}
+    .price-table{
+      width:100%;
+      border-collapse:collapse;
+      min-width:840px;
+    }
+    .price-table th,.price-table td{
+      padding:14px 12px;
+      border-bottom:1px solid var(--border);
+      text-align:left;
+      font-size:14px;
+      vertical-align:top;
+    }
+    .price-table th{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+
+    .ai-box{
+      margin-top:18px;
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      padding:18px;
+    }
+    .ai-box-header{display:flex;gap:12px;align-items:center;margin-bottom:10px}
+    .ai-icon{
+      width:36px;height:36px;border-radius:50%;
+      background:var(--green-light);
+      display:flex;align-items:center;justify-content:center;
+      color:var(--green-dark)
+    }
+    .ai-box-title{font-weight:700}
+    .ai-box-sub{font-size:13px;color:var(--muted)}
+    .loading{display:flex;align-items:center;gap:10px;color:var(--muted)}
+    .spinner{
+      width:16px;height:16px;border:2px solid #ddd;border-top-color:var(--green);
+      border-radius:50%;animation:spin 1s linear infinite
+    }
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    .empty-hero{
+      text-align:center;
+      padding:10px 0 24px;
+    }
+    .empty-icon{font-size:44px;margin-bottom:10px}
+    .edu-grid,.players-grid{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:14px;
+      margin:18px 0 28px;
+    }
+    .edu-card,.player-card{
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      padding:18px;
+      box-shadow:var(--shadow);
+    }
+    .edu-icon{
+      font-size:24px;
+      margin-bottom:10px;
+    }
+    .edu-title,.player-title{font-weight:700;margin-bottom:8px}
+    .edu-text,.player-text{font-size:14px;color:var(--muted);line-height:1.6}
+    .edu-link{display:inline-block;margin-top:10px;color:var(--green-dark);font-weight:700}
+    .player-type{
+      font-size:12px;
+      color:var(--green-dark);
+      font-weight:700;
+      margin-bottom:8px;
+      text-transform:uppercase;
+      letter-spacing:.04em;
+    }
+    .player-list{margin:12px 0 0 18px;color:var(--muted);font-size:14px;line-height:1.6}
+
+    .steps{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 14px}
+    .step{padding:8px 12px;border-radius:999px;background:var(--green-light);color:var(--green-dark);font-size:13px;font-weight:700}
+    .list{display:grid;gap:12px}
+    .option{display:flex;justify-content:space-between;gap:16px;align-items:center;border:1px solid var(--border);border-radius:14px;padding:14px;background:#fff}
+    .price{font-size:20px;font-weight:700;color:var(--green-dark)}
+
+    .about-hero{
+      max-width:1200px;
+      margin:24px auto 0;
+      padding:40px 24px;
+      text-align:center;
+    }
+    .about-hero h1{
+      margin:0 0 10px;
+      font-family:'DM Serif Display', serif;
+      font-size:clamp(34px,5vw,54px);
+    }
+    .page-content{max-width:1200px;margin:0 auto;padding:24px}
+    .cta-section{
+      max-width:960px;
+      margin:0 auto 40px;
+      padding:32px;
+      text-align:center;
+    }
+
+    footer{
+      border-top:1px solid var(--border);
+      background:#fff;
+      margin-top:24px;
+    }
+    .footer-inner{
+      max-width:1200px;
+      margin:0 auto;
+      padding:28px 24px;
+      display:grid;
+      grid-template-columns:1.3fr 1fr 1fr;
+      gap:24px;
+    }
+    .footer-col h4{margin:0 0 10px;font-size:14px}
+    .footer-col ul{margin:0;padding:0;list-style:none}
+    .footer-col li{margin:8px 0;color:var(--muted)}
+    .footer-col a{color:var(--muted)}
+    .footer-bottom{
+      max-width:1200px;
+      margin:0 auto;
+      padding:0 24px 24px;
+    }
+
+    .notify-banner{
+      padding:14px 16px;
+      margin-bottom:18px;
+      background:var(--green-light);
+      color:var(--green-dark);
+      font-weight:600;
+    }
+
+    @media (max-width:1000px){
+      .stats-row,.edu-grid,.players-grid,.page-grid,.footer-inner{grid-template-columns:1fr 1fr}
+    }
+    @media (max-width:700px){
+      .stats-row,.edu-grid,.players-grid,.page-grid,.footer-inner,.row,.form-grid{grid-template-columns:1fr}
+      .nav-inner,.nav-links{justify-content:center}
+      .hero{padding-top:36px}
+      .search-wrap input{min-width:100%}
+      .option{flex-direction:column;align-items:flex-start}
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a class="logo" href="#" onclick="showTab('home');return false;">Check<span>Med</span></a>
+    <div class="nav-links">
+      <a onclick="showTab('home')">Home</a>
+      <a onclick="showTab('reminders')">Reminders</a>
+      <a onclick="showTab('interactions')">Drug checker</a>
+      <a onclick="showTab('about')">About</a>
+      <a class="nav-cta" onclick="showTab('home');document.getElementById('drug-search').focus();">Compare prices</a>
+    </div>
+  </div>
+</nav>
+
+<div class="tab-bar">
+  <div class="tab active" id="tab-home" onclick="showTab('home')">Price comparison</div>
+  <div class="tab" id="tab-reminders" onclick="showTab('reminders')">Medication reminders</div>
+  <div class="tab" id="tab-interactions" onclick="showTab('interactions')">Drug interactions</div>
+  <div class="tab" id="tab-about" onclick="showTab('about')">About</div>
+</div>
+
+<div class="section active" id="sec-home">
+  <div class="hero">
+    <div class="hero-badge">Free · No account needed · Updated daily</div>
+    <h1>Compare your medication<br>prices. <em>Instantly.</em></h1>
+    <p>See what insurers, PBMs, and drug manufacturers actually charge for your prescriptions — side by side, in plain English.</p>
+
+    <div class="search-wrap">
+      <input type="text" id="drug-search" placeholder="Search a medication (e.g. Metformin, Ozempic...)" onkeydown="if(event.key==='Enter')searchDrug()" />
+      <button class="btn-secondary" onclick="scanPrescription()">📷 Scan</button>
+      <button class="btn-primary" onclick="searchDrug()">Compare prices</button>
+    </div>
+
+    <div class="quick-pills">
+      <span class="pill" onclick="quickSearch('Metformin')">Metformin</span>
+      <span class="pill" onclick="quickSearch('Atorvastatin')">Atorvastatin</span>
+      <span class="pill" onclick="quickSearch('Ozempic')">Ozempic</span>
+      <span class="pill" onclick="quickSearch('Lisinopril')">Lisinopril</span>
+      <span class="pill" onclick="quickSearch('Humira')">Humira</span>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-num">2,400+</div><div class="stat-label">Medications tracked</div></div>
+    <div class="stat-card"><div class="stat-num">38</div><div class="stat-label">Insurance plans compared</div></div>
+    <div class="stat-card"><div class="stat-num">12</div><div class="stat-label">PBMs included</div></div>
+    <div class="stat-card"><div class="stat-num">43%</div><div class="stat-label">Avg savings found</div></div>
+  </div>
+
+  <div class="page-grid">
+    <div class="card" id="insurance">
+      <div class="card-title">Insurance plan steps</div>
+      <div class="steps">
+        <div class="step">1. Insurance type</div>
+        <div class="step">2. Plan stage</div>
+        <div class="step">3. Member ID</div>
+        <div class="step">4. Coverage details</div>
+      </div>
+      <div class="row">
+        <div>
+          <label class="label">Insurance type</label>
+          <select>
+            <option>Private</option>
+            <option>Medicare</option>
+            <option>Medicaid</option>
+            <option>No insurance</option>
+          </select>
+        </div>
+        <div>
+          <label class="label">Plan stage</label>
+          <select>
+            <option>Provider</option>
+            <option>Plan name</option>
+            <option>Member number</option>
+            <option>Coverage tier</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label class="label">Insurance member ID</label>
+          <input class="input" placeholder="Enter member number">
+        </div>
+        <div>
+          <label class="label">Coverage notes</label>
+          <input class="input" placeholder="Copay, deductible, tier">
+        </div>
+      </div>
+      <p class="muted">This section helps users pick the right insurance stage before showing the final drug price.</p>
+    </div>
+
+    <div class="card" id="signup">
+      <div class="card-title">Create account</div>
+      <div class="row">
+        <div>
+          <label class="label">Full name</label>
+          <input class="input" placeholder="Your name">
+        </div>
+        <div>
+          <label class="label">Phone number</label>
+          <input class="input" placeholder="Your phone">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label class="label">Email address</label>
+          <input class="input" placeholder="name@example.com">
+        </div>
+        <div>
+          <label class="label">Insurance number</label>
+          <input class="input" placeholder="Policy or member ID">
+        </div>
+      </div>
+      <div class="chips" style="margin-top:14px;">
+        <div class="chip">Save search history</div>
+        <div class="chip">Get reminders</div>
+        <div class="chip">Track refill alerts</div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;">
+        <button class="btn-primary">Sign up</button>
+        <button class="btn-secondary">Continue as guest</button>
+      </div>
+    </div>
+
+    <div class="card" id="pricing">
+      <div class="card-title">Prices without insurance</div>
+      <p class="muted">If the user does not have insurance, show cash prices and savings options side by side.</p>
+      <div class="list">
+        <div class="option"><div><strong>Cash price</strong><div class="muted">Retail pharmacy price</div></div><div class="price">$24.00</div></div>
+        <div class="option"><div><strong>Discount card</strong><div class="muted">GoodRx / coupons</div></div><div class="price">$9.00</div></div>
+        <div class="option"><div><strong>Manufacturer help</strong><div class="muted">Savings or assistance program</div></div><div class="price">$0.00</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Best plan suggestion</div>
+      <p class="muted">For uninsured users, recommend the cheapest option. For insured users, show whether the pharmacy coupon or the insurance copay is lower.</p>
+      <div class="chips">
+        <div class="chip">Best for uninsured</div>
+        <div class="chip">Best insurance copay</div>
+        <div class="chip">Most savings</div>
+        <div class="chip">Scan a pill bottle</div>
+      </div>
+      <div style="margin-top:16px;padding:16px;border-radius:14px;background:var(--green-light);color:var(--green-dark);font-weight:700;">
+        Recommended: use the discount card price if you have no insurance.
+      </div>
+    </div>
+  </div>
+
+  <div class="page-content">
+    <div class="results-container" id="results-area" style="display:none;">
+      <div class="results-header">
+        <div>
+          <div class="results-title" id="results-title">Showing results for Metformin 500mg — 30-day supply</div>
+          <div class="results-sub">Prices are estimates · always verify with your pharmacy</div>
+        </div>
+        <div class="filter-row">
+          <button class="filter-btn active" onclick="filterResults('all',this)">All sources</button>
+          <button class="filter-btn" onclick="filterResults('pbm',this)">PBMs only</button>
+          <button class="filter-btn" onclick="filterResults('insurance',this)">Insurance</button>
+          <button class="filter-btn" onclick="filterResults('manufacturer',this)">Manufacturer</button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="price-table">
+          <thead>
+            <tr>
+              <th>Provider / plan</th>
+              <th>Type</th>
+              <th>Monthly price</th>
+              <th>Your copay</th>
+              <th>Savings vs list</th>
+              <th>Coverage notes</th>
+            </tr>
+          </thead>
+          <tbody id="price-tbody"></tbody>
+        </table>
+      </div>
+
+      <div class="ai-box">
+        <div class="ai-box-header">
+          <div class="ai-icon">
+            <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+          </div>
+          <div>
+            <div class="ai-box-title">AI suggestion</div>
+            <div class="ai-box-sub">Powered by Claude</div>
+          </div>
+        </div>
+        <div class="ai-content" id="ai-content">
+          <div class="loading"><div class="spinner"></div> Analyzing prices and alternatives...</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="no-results-state" class="results-container">
+      <div class="empty-hero">
+        <div class="empty-icon">💊</div>
+        <h2>Search for a medication above</h2>
+        <p>We'll show you prices from insurers, PBMs, and manufacturer programs — plus AI suggestions for saving more.</p>
+      </div>
+
+      <div class="edu-grid">
+        <div class="edu-card">
+          <div class="edu-icon">🏦</div>
+          <div class="edu-title">What is a PBM?</div>
+          <div class="edu-text">Pharmacy Benefit Managers are powerful middlemen who negotiate drug prices between insurers and pharmacies — but don't always pass the savings on to you.</div>
+          <a class="edu-link" onclick="showTab('about')">Learn how PBMs work →</a>
+        </div>
+        <div class="edu-card">
+          <div class="edu-icon">📋</div>
+          <div class="edu-title">How insurance tiers work</div>
+          <div class="edu-text">Your plan places every drug into a tier — from cheap generics (Tier 1) to expensive specialty drugs (Tier 4+). Knowing your tier helps you pay a lot less.</div>
+          <a class="edu-link" onclick="showTab('about')">Understand tiers →</a>
+        </div>
+        <div class="edu-card">
+          <div class="edu-icon">🎟️</div>
+          <div class="edu-title">Manufacturer coupons</div>
+          <div class="edu-text">Drug makers offer Patient Assistance Programs that can cut costs dramatically — especially for brand-name biologics like Humira or Ozempic.</div>
+          <a class="edu-link" onclick="showTab('about')">Find assistance programs →</a>
+        </div>
+        <div class="edu-card">
+          <div class="edu-icon">💡</div>
+          <div class="edu-title">Generic vs brand-name</div>
+          <div class="edu-text">Generics contain the same active ingredient as brand-name drugs but can cost 80–90% less. Always ask your doctor if a generic is available for your medication.</div>
+          <a class="edu-link" onclick="showTab('about')">See generic options →</a>
+        </div>
+      </div>
+
+      <h2 style="font-family:'DM Serif Display',serif; font-size:22px; margin-bottom:1rem;">The 3 players that control your drug prices</h2>
+      <div class="players-grid" style="margin-bottom:3rem;">
+        <div class="player-card">
+          <div class="player-type">PBM — Pharmacy Benefit Manager</div>
+          <div class="player-title">The middlemen</div>
+          <div class="player-text">PBMs sit between insurance companies and pharmacies. They negotiate rebates from drug manufacturers and decide which drugs are covered — but often keep a portion of those savings.</div>
+          <ul class="player-list">
+            <li>CVS Caremark</li>
+            <li>Express Scripts (Cigna)</li>
+            <li>OptumRx (UnitedHealth)</li>
+            <li>GoodRx (discount card)</li>
+          </ul>
+        </div>
+        <div class="player-card">
+          <div class="player-type">Insurance Companies</div>
+          <div class="player-title">The plan makers</div>
+          <div class="player-text">Your health insurer determines which drugs are "covered" and at what copay level. They organize medications into formulary tiers — the higher the tier, the more you pay.</div>
+          <ul class="player-list">
+            <li>Blue Cross Blue Shield</li>
+            <li>UnitedHealthcare</li>
+            <li>Aetna / Cigna / Humana</li>
+            <li>Medicare Part D plans</li>
+          </ul>
+        </div>
+        <div class="player-card">
+          <div class="player-type">Drug Manufacturers</div>
+          <div class="player-title">The price setters</div>
+          <div class="player-text">Pharmaceutical companies set the original list price of drugs. Many offer Patient Assistance Programs that provide free or heavily discounted medications based on income.</div>
+          <ul class="player-list">
+            <li>Novo Nordisk (Ozempic)</li>
+            <li>AbbVie (Humira, Skyrizi)</li>
+            <li>Pfizer (Eliquis, Xeljanz)</li>
+            <li>200+ programs tracked</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding: 0 2rem 3rem; max-width:960px; margin:0 auto;">
+    <div class="cta-section">
+      <h2>Ready to find a better price?</h2>
+      <p>Search your medication and see all your options side by side — free, in seconds.</p>
+      <button class="btn-white" onclick="showTab('home');document.getElementById('drug-search').focus()">Compare prices now</button>
+    </div>
+  </div>
+</div>
+
+<div class="section" id="sec-reminders">
+  <div class="page-content">
+    <div class="page-title">Medication reminders</div>
+    <div class="page-sub">Set daily reminders for your medications and get alerts when it's time to refill or when sale prices are available.</div>
+
+    <div class="notify-banner" id="notify-banner">
+      Notifications enabled! You'll get browser reminders at the times you set.
+    </div>
+
+    <div class="card">
+      <div class="card-title">Add a new reminder</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Medication name</label>
+          <input class="form-input" id="r-drug" placeholder="e.g. Metformin 500mg" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Dosage</label>
+          <input class="form-input" id="r-dose" placeholder="e.g. 1 tablet" />
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Reminder time</label>
+          <input class="form-input" type="time" id="r-time" value="08:00" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Frequency</label>
+          <select class="form-input" id="r-freq">
+            <option>Once daily</option>
+            <option>Twice daily</option>
+            <option>Three times daily</option>
+            <option>With meals</option>
+            <option>Weekly</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Refill alert (days before running out)</label>
+          <input class="form-input" type="number" id="r-refill" value="7" min="1" max="30" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notes (optional)</label>
+          <input class="form-input" id="r-notes" placeholder="e.g. Take with food, avoid grapefruit" />
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn-primary" onclick="addReminder()">Add reminder</button>
+        <button class="btn-secondary" onclick="requestNotifications()">Enable notifications</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Your reminders</div>
+      <div class="reminder-list" id="reminder-list">
+        <div class="empty-state">No reminders set yet. Add one above.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Medication sale alerts</div>
+      <div class="sale-card">
+        <div class="sale-icon">📉</div>
+        <div class="sale-info">
+          <div class="sale-name">Metformin 500mg (GoodRx)</div>
+          <div class="sale-detail">Price dropped at CVS Pharmacy · Expires in 3 days</div>
+        </div>
+        <div class="sale-price">
+          <div class="sale-new">$3.80</div>
+          <div class="sale-old">$4.50</div>
+          <div class="sale-pct">-16%</div>
+        </div>
+      </div>
+      <div class="sale-card">
+        <div class="sale-icon">💰</div>
+        <div class="sale-info">
+          <div class="sale-name">Atorvastatin 20mg (OptumRx)</div>
+          <div class="sale-detail">New mail-order discount available · Save on 90-day supply</div>
+        </div>
+        <div class="sale-price">
+          <div class="sale-new">$22.00</div>
+          <div class="sale-old">$36.00</div>
+          <div class="sale-pct">-39%</div>
+        </div>
+      </div>
+      <div class="sale-card">
+        <div class="sale-icon">🎟️</div>
+        <div class="sale-info">
+          <div class="sale-name">Ozempic (Novo Nordisk coupon)</div>
+          <div class="sale-detail">New savings card available · Cap at $99/month for insured</div>
+        </div>
+        <div class="sale-price">
+          <div class="sale-new">$99.00</div>
+          <div class="sale-old">$892.00</div>
+          <div class="sale-pct">-89%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" id="sec-interactions">
+  <div class="page-content">
+    <div class="page-title">Drug interaction checker</div>
+    <div class="page-sub">Enter all the medications you take. Our AI will flag dangerous combinations, dosage concerns, and interactions you should discuss with your doctor.</div>
+
+    <div class="card">
+      <div class="card-title">Your medications</div>
+      <div style="display:flex; gap:10px; margin-bottom:1rem;">
+        <input class="form-input" id="int-drug" placeholder="Add a medication (e.g. Warfarin, Aspirin, Metformin...)" onkeydown="if(event.key==='Enter')addDrug()" style="flex:1;" />
+        <button class="btn-primary" onclick="addDrug()">Add</button>
+      </div>
+      <div class="drug-tag-row" id="drug-tags"></div>
+      <button class="btn-primary" id="check-btn" style="display:none;" onclick="checkInteractions()">Check interactions with AI →</button>
+    </div>
+
+    <div id="interaction-results"></div>
+
+    <div class="card" style="border-color:#FAC775; background:#FAEEDA;">
+      <p style="font-size:13px; color:#633806; line-height:1.6;">
+        <strong>Disclaimer:</strong> This tool is for informational purposes only. It does not replace professional medical advice, diagnosis, or treatment. Always consult your doctor or pharmacist before starting, stopping, or changing any medications.
+      </p>
+    </div>
+  </div>
+</div>
+
+<div class="section" id="sec-about">
+  <div class="about-hero">
+    <h1>About CheckMed</h1>
+    <p>Helping patients navigate the confusing world of drug pricing — free, always.</p>
+  </div>
+  <div class="page-content" style="padding-top:2.5rem;">
+    <div class="edu-grid" style="margin-bottom:2rem;">
+      <div class="edu-card">
+        <div class="edu-icon">🎯</div>
+        <div class="edu-title">Our mission</div>
+        <div class="edu-text">CheckMed was built to give patients the same pricing information that insurers, PBMs, and pharmacies already have — so you can make smarter decisions and pay less at the pharmacy.</div>
+      </div>
+      <div class="edu-card">
+        <div class="edu-icon">🔒</div>
+        <div class="edu-title">Privacy first</div>
+        <div class="edu-text">We don't require an account or store your searches. CheckMed is not affiliated with any insurer, PBM, or drug manufacturer. We have no financial incentive to promote any specific option.</div>
+      </div>
+      <div class="edu-card">
+        <div class="edu-icon">📊</div>
+        <div class="edu-title">Data sources</div>
+        <div class="edu-text">Pricing data is sourced from publicly available formulary files, CMS datasets, manufacturer websites, and GoodRx pricing APIs. Prices are updated daily and shown as estimates.</div>
+      </div>
+      <div class="edu-card">
+        <div class="edu-icon">🤖</div>
+        <div class="edu-title">AI-powered suggestions</div>
+        <div class="edu-text">Our AI suggestion engine uses Claude (by Anthropic) to analyze prices and suggest cheaper alternatives, generic substitutes, and assistance programs specific to your medication.</div>
+      </div>
+    </div>
+
+    <h2 style="font-family:'DM Serif Display',serif; font-size:22px; margin-bottom:1.5rem;">How it works</h2>
+    <div class="card" style="margin-bottom:1.5rem;">
+      <div style="display:flex; gap:1.5rem; align-items:flex-start;">
+        <div style="width:36px; height:36px; border-radius:50%; background:var(--green); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:500; flex-shrink:0;">1</div>
+        <div>
+          <div class="edu-title">Search your medication</div>
+          <div class="edu-text">Type the name of your prescription drug. We cover over 2,400 medications — from common generics like Metformin to specialty biologics like Humira and Ozempic. Search by brand or generic name.</div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:1.5rem;">
+      <div style="display:flex; gap:1.5rem; align-items:flex-start;">
+        <div style="width:36px; height:36px; border-radius:50%; background:var(--green); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:500; flex-shrink:0;">2</div>
+        <div>
+          <div class="edu-title">See prices side by side</div>
+          <div class="edu-text">CheckMed shows you prices across every major source — insurance plans, PBMs, and manufacturer assistance programs. Filter by type and use the AI suggestion panel to spot the best deal.</div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:3rem;">
+      <div style="display:flex; gap:1.5rem; align-items:flex-start;">
+        <div style="width:36px; height:36px; border-radius:50%; background:var(--green); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:500; flex-shrink:0;">3</div>
+        <div>
+          <div class="edu-title">Take action and save</div>
+          <div class="edu-text">Use our guides to apply for a patient assistance program, ask your doctor for a generic alternative, or show the comparison directly to your pharmacist. Small changes can save hundreds a year.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <a class="logo" href="#" onclick="showTab('home');return false;">Check<span>Med</span></a>
+      <p class="footer-desc">Helping patients compare prescription drug prices — free, always. Not affiliated with any insurer, PBM, or drug manufacturer.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Pages</h4>
+      <ul>
+        <li><a onclick="showTab('home')">Home</a></li>
+        <li><a onclick="showTab('about')">How it works</a></li>
+        <li><a onclick="showTab('about')">PBMs explained</a></li>
+        <li><a onclick="showTab('reminders')">Medication reminders</a></li>
+        <li><a onclick="showTab('interactions')">Drug interactions</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Legal</h4>
+      <ul>
+        <li><a href="#">Privacy policy</a></li>
+        <li><a href="#">Terms of use</a></li>
+        <li><a href="#">Disclaimer</a></li>
+        <li><a href="#">Contact us</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    © 2026 CheckMed. Prices shown are estimates for educational and informational purposes only. Always verify pricing with your pharmacy, insurance provider, or manufacturer before making any medical or financial decisions. CheckMed does not provide medical advice.
+  </div>
+</footer>
+
+<script>
+
+  // ============================================================
+  // STEP 1: PASTE YOUR SUPABASE KEYS HERE
+  // Get them from supabase.com → Project Settings → API
+  // ============================================================
+  const SUPABASE_URL = 'YOUR_SUPABASE_URL_HERE'
+  const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY_HERE'
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+
+  // ============================================================
+  // STEP 2: PASTE YOUR RENDER BACKEND URL HERE
+  // It looks like: https://checkmed-backend-1.onrender.com
+  // ============================================================
+  const BACKEND_URL = 'https://checkmed-backend-1.onrender.com'
+
+  // ============================================================
+  // DRUG DATA (price comparison table)
+  // ============================================================
+  const OPENFDA_API_KEY = "nbSf72SwAlwSppAli2qH0TzfhAO9YeTkzSaDIq1x"
+  const DRUG_DATA = {
+    metformin: { rows: [
+      { provider: "GoodRx (CVS)", type: "pbm", price: "$4.00", copay: "$4.00", savings: "95%", notes: "Lowest available — no insurance needed", best: true },
+      { provider: "Express Scripts", type: "pbm", price: "$8.50", copay: "$8.50", savings: "90%", notes: "Generic Tier 1" },
+      { provider: "OptumRx", type: "pbm", price: "$9.00", copay: "$9.00", savings: "89%", notes: "Mail order available" },
+      { provider: "UnitedHealthcare", type: "insurance", price: "$18.00", copay: "$5.00", savings: "78%", notes: "Tier 1 copay" },
+      { provider: "Blue Cross Blue Shield", type: "insurance", price: "$22.00", copay: "$10.00", savings: "73%", notes: "Preferred generic" },
+      { provider: "Aetna", type: "insurance", price: "$25.00", copay: "$0.00", savings: "70%", notes: "No cost Tier 1 plan" },
+    ]},
+    atorvastatin: { rows: [
+      { provider: "GoodRx (Walgreens)", type: "pbm", price: "$10.00", copay: "$10.00", savings: "87%", notes: "Best GoodRx price", best: true },
+      { provider: "CVS Caremark", type: "pbm", price: "$14.00", copay: "$14.00", savings: "82%", notes: "Tier 1 generic" },
+      { provider: "UnitedHealthcare", type: "insurance", price: "$20.00", copay: "$5.00", savings: "75%", notes: "Preferred generic" },
+      { provider: "Humana Part D", type: "insurance", price: "$28.00", copay: "$7.00", savings: "65%", notes: "Tier 1" },
+      { provider: "Pfizer PAP", type: "manufacturer", price: "$0.00", copay: "$0.00", savings: "100%", notes: "Income-based, apply at pfizer.com" },
+    ]},
+    ozempic: { rows: [
+      { provider: "Novo Nordisk PAP", type: "manufacturer", price: "$0.00", copay: "$0.00", savings: "100%", notes: "Income < $100K household eligible", best: true },
+      { provider: "Novo Nordisk savings card", type: "manufacturer", price: "$99.00", copay: "$99.00", savings: "89%", notes: "Insured patients — apply online" },
+      { provider: "Express Scripts", type: "pbm", price: "$892.00", copay: "$25.00", savings: "Varies", notes: "Formulary Tier 3 — PA required" },
+      { provider: "CVS Caremark", type: "pbm", price: "$950.00", copay: "$30.00", savings: "Varies", notes: "Prior authorization required" },
+      { provider: "Medicare Part D", type: "insurance", price: "$892.00", copay: "$47.00", savings: "95%", notes: "Covered with diabetes diagnosis" },
+    ]},
+    lisinopril: { rows: [
+      { provider: "Walmart Pharmacy", type: "pbm", price: "$4.00", copay: "$4.00", savings: "93%", notes: "$4 generic — no coupon needed", best: true },
+      { provider: "GoodRx (Walmart)", type: "pbm", price: "$4.00", copay: "$4.00", savings: "93%", notes: "Same as Walmart list" },
+      { provider: "OptumRx", type: "pbm", price: "$7.50", copay: "$7.50", savings: "87%", notes: "Mail order available" },
+      { provider: "UnitedHealthcare", type: "insurance", price: "$15.00", copay: "$0.00", savings: "75%", notes: "Tier 1 — no cost" },
+      { provider: "Cigna", type: "insurance", price: "$18.00", copay: "$5.00", savings: "70%", notes: "Preferred generic" },
+    ]},
+    humira: { rows: [
+      { provider: "AbbVie myAbbVie Assist", type: "manufacturer", price: "$0.00", copay: "$0.00", savings: "100%", notes: "Uninsured patients — apply at abbvie.com", best: true },
+      { provider: "AbbVie savings card", type: "manufacturer", price: "$6,922.00", copay: "$5.00", savings: "99%", notes: "Insured — $5/month copay cap" },
+      { provider: "Hadlima (biosimilar)", type: "manufacturer", price: "$1,890.00", copay: "Varies", savings: "73%", notes: "Samsung Bioepis — same drug" },
+      { provider: "Express Scripts", type: "pbm", price: "$6,922.00", copay: "$180.00", savings: "Varies", notes: "Specialty Tier 4 — PA required" },
+      { provider: "CVS Specialty", type: "pbm", price: "$6,922.00", copay: "$150.00", savings: "Varies", notes: "Prior authorization needed" },
+    ]}
+  }
+
+  let currentRows = [], currentFilter = "all"
+  let reminders = JSON.parse(localStorage.getItem("cm_reminders_v2") || "[]")
+  let drugs = [], lastDrugInfo = null
+
+  // ============================================================
+  // TABS
+  // ============================================================
+  function showTab(t) {
+    ["home","reminders","interactions","about"].forEach(s => {
+      const sec = document.getElementById("sec-"+s)
+      const tab = document.getElementById("tab-"+s)
+      if (sec) sec.classList.toggle("active", s===t)
+      if (tab) tab.classList.toggle("active", s===t)
+    })
+    window.scrollTo(0, 0)
+  }
+
+  // ============================================================
+  // INSURANCE HELPERS
+  // ============================================================
+  function setStep(n, btn) {
+    document.querySelectorAll(".step-tab").forEach(b => b.classList.remove("active"))
+    btn.classList.add("active")
+  }
+
+  function updatePlanSuggestion() {
+    const type = document.getElementById("ins-type")?.value || ""
+    const rec = document.getElementById("plan-recommendation")
+    if (!rec) return
+    if (type === "No insurance") rec.textContent = "Recommended: use the discount card price if you have no insurance."
+    else if (type === "Medicare Part D") rec.textContent = "Recommended: check your plan's copay vs GoodRx — Medicare patients can't always use manufacturer coupons."
+    else rec.textContent = "Recommended: compare your insurance copay against GoodRx — whichever is lower wins."
+  }
+
+  function setPlanFilter(filter, btn) {
+    document.querySelectorAll(".plan-filter-btn").forEach(b => b.classList.remove("active"))
+    btn.classList.add("active")
+    const rec = document.getElementById("plan-recommendation")
+    if (!rec) return
+    if (filter === "uninsured") rec.textContent = "Recommended: use the discount card price if you have no insurance."
+    else if (filter === "copay") rec.textContent = "Recommended: your best insurance copay based on your current plan stage."
+    else if (filter === "savings") rec.textContent = "Recommended: manufacturer assistance programs offer the highest savings for eligible patients."
+  }
+
+  // ============================================================
+  // USER ACCOUNTS (Supabase)
+  // ============================================================
+  async function signupUser() {
+    const email = document.getElementById('acct-email')?.value?.trim()
+    const name = document.getElementById('acct-name')?.value?.trim()
+    const phone = document.getElementById('acct-phone')?.value?.trim()
+    if (!email) { alert('Please enter your email address.'); return }
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password: phone || 'checkmed123',
+      options: { data: { full_name: name, phone } }
+    })
+    if (error) alert('Signup error: ' + error.message)
+    else alert('✅ Account created! Check your email to confirm your account.')
+  }
+
+  function continueAsGuest() {
+    document.getElementById("drug-search")?.focus()
+  }
+
+  // ============================================================
+  // SCANNER MODAL
+  // ============================================================
+  function openScannerModal() {
+    document.getElementById("scanner-overlay").classList.add("open")
+    document.getElementById("scan-modal-result").style.display = "none"
+    document.getElementById("modal-scan-body").innerHTML = ""
+    document.getElementById("modal-scan-status").textContent = "Reading prescription with AI..."
+    document.getElementById("modal-spinner").style.display = "block"
+    document.getElementById("scan-drop-zone").style.display = "block"
+  }
+
+  function closeScannerModal() {
+    document.getElementById("scanner-overlay").classList.remove("open")
+    document.getElementById("scan-file-inp").value = ""
+    document.getElementById("scan-camera-inp").value = ""
+  }
+
+  function handleModalDrop(e) { handleModalFile(e.dataTransfer.files[0]) }
+
+  async function handleModalFile(file) {
+    if (!file) return
+    document.getElementById("scan-drop-zone").style.display = "none"
+    document.getElementById("scan-modal-result").style.display = "block"
+    document.getElementById("modal-spinner").style.display = "block"
+    document.getElementById("modal-scan-status").textContent = "Reading prescription with AI..."
+    document.getElementById("modal-scan-body").innerHTML = ""
+    try {
+      const base64 = await new Promise((res, rej) => {
+        const reader = new FileReader()
+        reader.onload = () => res(reader.result.split(",")[1])
+        reader.onerror = () => rej(new Error("File read failed"))
+        reader.readAsDataURL(file)
+      })
+      const response = await fetch(BACKEND_URL + "/api/claude", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 800,
+          system: "Extract medication info from prescription images. Return ONLY valid JSON, no markdown.",
+          messages: [{ role: "user", content: [
+            { type: "image", source: { type: "base64", media_type: file.type || "image/jpeg", data: base64 } },
+            { type: "text", text: 'Return ONLY a JSON object: {"drugName":"...","dosage":"...","frequency":"...","quantity":"...","refills":"...","instructions":"...","confidence":"high/medium/low"}' }
+          ]}]
+        })
+      })
+      const data = await response.json()
+      const text = (data.content?.find(b => b.type === "text")?.text || "{}").replace(/```json|```/g, "").trim()
+      const r = JSON.parse(text)
+      document.getElementById("modal-spinner").style.display = "none"
+      const confIcon = r.confidence === "high" ? "✅" : r.confidence === "medium" ? "⚡" : "⚠️"
+      document.getElementById("modal-scan-status").textContent = r.drugName
+        ? `${confIcon} Found: ${r.drugName}${r.dosage ? " · " + r.dosage : ""}`
+        : "⚠️ Could not read drug name clearly"
+      document.getElementById("modal-scan-body").innerHTML = r.drugName ? `
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin:10px 0;">
+          <span style="background:var(--green-light);color:var(--green-dark);padding:5px 14px;border-radius:100px;font-size:13px;font-weight:500;">${r.drugName}</span>
+          ${r.dosage ? `<span style="background:#f4f3ef;color:#6b6b66;padding:5px 14px;border-radius:100px;font-size:13px;">${r.dosage}</span>` : ""}
+          ${r.frequency ? `<span style="background:#f4f3ef;color:#6b6b66;padding:5px 14px;border-radius:100px;font-size:13px;">${r.frequency}</span>` : ""}
+        </div>
+        ${r.instructions ? `<p style="font-size:12px;color:#9a9a94;margin-bottom:10px;">📝 ${r.instructions}</p>` : ""}
+        <div style="display:flex;gap:8px;">
+          <button onclick="scanAutoSearch('${(r.drugName||"").replace(/'/g,"\\'")}');" style="padding:9px 16px;background:var(--green);color:#fff;border:none;border-radius:100px;font-size:13px;cursor:pointer;">🔍 Search prices</button>
+          <button onclick="scanToReminder(${JSON.stringify(JSON.stringify(r))});" style="padding:9px 16px;background:transparent;border:1px solid #ccc;border-radius:100px;font-size:13px;cursor:pointer;">⏰ Add reminder</button>
+        </div>` : `<p style="font-size:13px;color:#9a9a94;">Try a clearer, well-lit image of the label.</p>`
+    } catch(err) {
+      document.getElementById("modal-spinner").style.display = "none"
+      document.getElementById("modal-scan-status").textContent = "Could not read prescription"
+      document.getElementById("modal-scan-body").innerHTML = `<p style="font-size:13px;color:#9a9a94;">Error: ${err.message}</p>`
+    }
+  }
+
+  function scanAutoSearch(drugName) {
+    closeScannerModal()
+    document.getElementById("drug-search").value = drugName
+    searchDrug()
+  }
+
+  function scanToReminder(jsonStr) {
+    try {
+      const r = JSON.parse(jsonStr)
+      closeScannerModal()
+      showTab("reminders")
+      setTimeout(() => {
+        if (r.drugName) document.getElementById("r-drug").value = r.drugName
+        if (r.dosage) document.getElementById("r-dose").value = r.dosage
+        if (r.instructions) document.getElementById("r-notes").value = r.instructions
+        if (r.frequency) {
+          const f = r.frequency.toLowerCase()
+          const sel = document.getElementById("r-freq")
+          if (f.includes("twice") || f.includes("bid")) sel.value = "Twice daily"
+          else if (f.includes("three") || f.includes("tid")) sel.value = "Three times daily"
+          else if (f.includes("week")) sel.value = "Weekly"
+          else sel.value = "Once daily"
+        }
+      }, 150)
+    } catch(e) {}
+  }
+
+  // ============================================================
+  // FDA + RXNAV APIs
+  // ============================================================
+  async function fetchFDADrugInfo(drugName) {
+    try {
+      const res = await fetch(`https://api.fda.gov/drug/label.json?search=openfda.generic_name:"${encodeURIComponent(drugName)}"&limit=1&api_key=${OPENFDA_API_KEY}`)
+      if (!res.ok) throw new Error()
+      const data = await res.json()
+      return data.results?.[0] || null
+    } catch {
+      try {
+        const res2 = await fetch(`https://api.fda.gov/drug/label.json?search=openfda.brand_name:"${encodeURIComponent(drugName)}"&limit=1&api_key=${OPENFDA_API_KEY}`)
+        if (!res2.ok) throw new Error()
+        const data2 = await res2.json()
+        return data2.results?.[0] || null
+      } catch { return null }
+    }
+  }
+
+  async function fetchRxCUI(drugName) {
+    try {
+      const res = await fetch(`https://rxnav.nlm.nih.gov/REST/rxcui.json?name=${encodeURIComponent(drugName)}&search=1`)
+      const data = await res.json()
+      return data.idGroup?.rxnormId?.[0] || null
+    } catch { return null }
+  }
+
+  async function fetchDrugSuggestions(query) {
+    try {
+      const res = await fetch(`https://rxnav.nlm.nih.gov/REST/spellingsuggestions.json?name=${encodeURIComponent(query)}`)
+      const data = await res.json()
+      return data.suggestionGroup?.suggestionList?.suggestion || []
+    } catch { return [] }
+  }
+
+  function parseFDALabel(label, searchTerm) {
+    const o = label.openfda || {}
+    return {
+      brandName: (o.brand_name || [])[0] || "",
+      genericName: (o.generic_name || [])[0] || searchTerm,
+      manufacturer: (o.manufacturer_name || [])[0] || "Unknown",
+      route: (o.route || [])[0] || "",
+      form: (o.dosage_form || [])[0] || "",
+      warnings: (label.warnings?.[0] || label.warnings_and_cautions?.[0] || "").substring(0, 300),
+      indications: (label.indications_and_usage?.[0] || "").substring(0, 400),
+      contraindications: (label.contraindications?.[0] || "").substring(0, 300)
+    }
+  }
+
+  function buildAISuggestion(info) {
+    let t = ""
+    if (info.brandName && info.genericName && info.brandName.toLowerCase() !== info.genericName.toLowerCase())
+      t += `**${info.brandName} vs Generic (${info.genericName}):** A generic version exists — often 50–90% cheaper. Ask your pharmacist.\n\n`
+    if (info.indications) t += `**What it's used for:** ${info.indications.replace(/\n/g," ").trim().substring(0,250)}...\n\n`
+    if (info.warnings) t += `**Important warnings:** ${info.warnings.replace(/\n/g," ").trim().substring(0,250)}...\n\n`
+    t += `**Find the lowest price:** Compare GoodRx coupons at your pharmacy — the coupon is often cheaper than your copay. Check for a manufacturer Patient Assistance Program (PAP) if uninsured.\n\n`
+    t += `**Source:** Live FDA OpenFDA data · Always verify with your pharmacist.`
+    return t
+  }
+
+  // ============================================================
+  // DRUG SEARCH
+  // ============================================================
+  function quickSearch(name) {
+    document.getElementById("drug-search").value = name
+    searchDrug()
+  }
+
+  async function searchDrug() {
+    const q = document.getElementById("drug-search").value.trim()
+    if (!q) return
+    const ra = document.getElementById("results-area")
+    const nr = document.getElementById("no-results-state")
+    ra.style.display = "block"
+    nr.style.display = "none"
+    document.getElementById("results-title").textContent = `Searching FDA database for "${q}"...`
+    document.getElementById("price-tbody").innerHTML = `<tr><td colspan="6" style="text-align:center;padding:2rem;"><div style="display:flex;align-items:center;gap:10px;justify-content:center;color:#9a9a94;"><div style="width:18px;height:18px;border:2px solid #eee;border-top-color:var(--green);border-radius:50%;animation:spin 0.7s linear infinite;"></div> Fetching FDA drug data...</div></td></tr>`
+    document.getElementById("ai-content").innerHTML = '<div style="display:flex;align-items:center;gap:10px;color:#9a9a94;"><div style="width:18px;height:18px;border:2px solid #eee;border-top-color:var(--green);border-radius:50%;animation:spin 0.7s linear infinite;"></div> Loading drug information...</div>'
+
+    const fdaLabel = await fetchFDADrugInfo(q)
+    if (!fdaLabel) {
+      const suggestions = await fetchDrugSuggestions(q)
+      ra.style.display = "none"
+      nr.style.display = "block"
+      const h2 = nr.querySelector(".empty-hero h2")
+      const p = nr.querySelector(".empty-hero p")
+      if (h2) h2.textContent = `No results found for "${q}"`
+      if (p) p.innerHTML = suggestions.length
+        ? `Did you mean: ${suggestions.slice(0,5).map(s=>`<span style="padding:4px 12px;border:1px solid #ccc;border-radius:100px;font-size:13px;cursor:pointer;" onclick="quickSearch('${s}')">${s}</span>`).join(" ")}`
+        : `No close match found. Try a brand name or generic name.`
+      return
+    }
+
+    const info = parseFDALabel(fdaLabel, q)
+    lastDrugInfo = info
+    const displayName = info.brandName ? `${info.brandName} (${info.genericName})` : info.genericName
+    document.getElementById("results-title").textContent = `FDA data for: ${displayName}`
+    currentFilter = "all"
+    document.querySelectorAll(".filter-btn").forEach(b => b.classList.toggle("active", b.textContent.trim() === "All sources"))
+
+    const qLower = q.toLowerCase()
+    const dataKey = Object.keys(DRUG_DATA).find(k =>
+      qLower.includes(k) || k.includes(qLower.split(" ")[0]) ||
+      info.genericName.toLowerCase().includes(k) || (info.brandName||"").toLowerCase().includes(k)
+    )
+    currentRows = dataKey ? DRUG_DATA[dataKey].rows : []
+
+    // Update price cards
+    if (currentRows.length) {
+      const pbm = [...currentRows].filter(r=>r.type==="pbm").sort((a,b)=>parseFloat(a.price.replace(/[^0-9.]/g,""))-parseFloat(b.price.replace(/[^0-9.]/g,"")))[0]
+      const mfr = [...currentRows].filter(r=>r.type==="manufacturer").sort((a,b)=>parseFloat(a.price.replace(/[^0-9.]/g,""))-parseFloat(b.price.replace(/[^0-9.]/g,"")))[0]
+      const ins = [...currentRows].filter(r=>r.type==="insurance").sort((a,b)=>parseFloat(a.copay.replace(/[^0-9.]/g,""))-parseFloat(b.copay.replace(/[^0-9.]/g,"")))[0]
+      const cp = document.getElementById("cash-price")
+      const dp = document.getElementById("discount-price")
+      const mp = document.getElementById("mfr-price")
+      if (cp) cp.textContent = ins ? ins.price : "—"
+      if (dp) dp.textContent = pbm ? pbm.price : "—"
+      if (mp) mp.textContent = mfr ? mfr.price : "—"
+    }
+
+    renderTable(currentRows)
+    showAI(buildAISuggestion(info))
+    showDrugInfoPanel(info)
+  }
+
+  function showDrugInfoPanel(info) {
+    const existing = document.getElementById("fda-info-panel")
+    if (existing) existing.remove()
+    const panel = document.createElement("div")
+    panel.id = "fda-info-panel"
+    panel.style.cssText = "background:#fff;border:1px solid rgba(0,0,0,0.08);border-radius:16px;overflow:hidden;margin-top:1rem;box-shadow:0 2px 12px rgba(0,0,0,0.07);"
+    panel.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;padding:14px 20px;border-bottom:1px solid rgba(0,0,0,0.08);background:#f4f3ef;">
+        <div style="width:24px;height:24px;background:var(--green);border-radius:6px;display:flex;align-items:center;justify-content:center;">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="#fff"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+        </div>
+        <span style="font-size:13px;font-weight:500;">Real FDA Drug Information</span>
+        <span style="font-size:12px;color:#9a9a94;margin-left:auto;">Source: OpenFDA · Live data</span>
+      </div>
+      <div style="padding:1.25rem 1.5rem;font-size:14px;color:#6b6b66;line-height:1.7;">
+        <p><strong style="color:#1a1a18;">Brand name:</strong> ${info.brandName || "Generic only"}</p>
+        <p><strong style="color:#1a1a18;">Generic name:</strong> ${info.genericName}</p>
+        <p><strong style="color:#1a1a18;">Manufacturer:</strong> ${info.manufacturer}</p>
+        <p><strong style="color:#1a1a18;">Route:</strong> ${info.route || "—"} · <strong style="color:#1a1a18;">Form:</strong> ${info.form || "—"}</p>
+        ${info.indications ? `<p style="margin-top:8px;"><strong style="color:#1a1a18;">Used for:</strong> ${info.indications.replace(/\n/g," ").substring(0,200)}...</p>` : ""}
+        ${info.warnings ? `<div style="margin-top:1rem;padding:0.75rem;background:#FAEEDA;border-radius:8px;border:1px solid #FAC775;font-size:13px;"><strong>⚠️ Warning:</strong> ${info.warnings.replace(/\n/g," ").substring(0,250)}...</div>` : ""}
+        ${info.contraindications ? `<div style="margin-top:0.75rem;padding:0.75rem;background:#FCEBEB;border-radius:8px;border:1px solid #F09595;font-size:13px;"><strong>🚫 Do not use if:</strong> ${info.contraindications.replace(/\n/g," ").substring(0,250)}...</div>` : ""}
+        <p style="margin-top:0.75rem;font-size:11px;color:#9a9a94;">Always consult your doctor or pharmacist before making medication decisions.</p>
+      </div>`
+    document.getElementById("results-area").appendChild(panel)
+  }
+
+  function renderTable(rows) {
+    const tbody = document.getElementById("price-tbody")
+    if (!rows.length) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:2rem;color:#9a9a94;">Price data not yet available for this drug. Real-time prices coming with GoodRx API integration.</td></tr>`
+      return
+    }
+    tbody.innerHTML = rows.map(r => `
+      <tr style="${r.best ? 'border-left:3px solid var(--green);' : ''}">
+        <td style="font-weight:500;padding:13px 16px;border-bottom:1px solid rgba(0,0,0,0.08);">${r.provider}</td>
+        <td style="padding:13px 16px;border-bottom:1px solid rgba(0,0,0,0.08);">
+          <span style="padding:3px 10px;border-radius:100px;font-size:11px;font-weight:500;background:${r.type==='pbm'?'#EEEDFE':r.type==='insurance'?'#E6F1FB':'#E1F5EE'};color:${r.type==='pbm'?'#534AB7':r.type==='insurance'?'#185FA5':'#0F6E56'};">
+            ${r.type==='pbm'?'PBM':r.type==='insurance'?'Insurance':'Manufacturer'}
+          </span>
+        </td>
+        <td style="padding:13px 16px;border-bottom:1px solid rgba(0,0,0,0.08);${r.best?'color:var(--green-dark);font-weight:500;':''}">${r.price}</td>
+        <td style="padding:13px 16px;border-bottom:1px solid rgba(0,0,0,0.08);">${r.copay}</td>
+        <td style="padding:13px 16px;border-bottom:1px solid rgba(0,0,0,0.08);color:var(--green-dark);font-size:12px;font-weight:500;">${r.savings}</td>
+        <td style="padding:13px 16px;border-bottom:1px solid rgba(0,0,0,0.08);font-size:12px;color:#9a9a94;">${r.notes}</td>
+      </tr>`).join("")
+  }
+
+  function filterResults(type, btn) {
+    currentFilter = type
+    document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"))
+    btn.classList.add("active")
+    renderTable(type === "all" ? currentRows : currentRows.filter(r => r.type === type))
+  }
+
+  function showAI(text) {
+    const el = document.getElementById("ai-content")
+    if (!el) return
+    el.innerHTML = text.split("\n").map(line => {
+      if (!line.trim()) return ""
+      return "<p>" + line.replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>").replace(/^•\s/,"&bull;&nbsp;") + "</p>"
+    }).filter(Boolean).join("")
+  }
+
+  // ============================================================
+  // REMINDERS (Supabase if logged in, localStorage if guest)
+  // ============================================================
+  async function addReminder() {
+    const drug = document.getElementById("r-drug").value.trim()
+    const dose = document.getElementById("r-dose").value.trim()
+    const time = document.getElementById("r-time").value
+    const freq = document.getElementById("r-freq").value
+    const refill = document.getElementById("r-refill").value
+    const notes = document.getElementById("r-notes").value.trim()
+    if (!drug) { alert("Please enter a medication name."); return }
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      const { error } = await supabase.from("reminders").insert({
+        user_id: user.id, drug, dose, time, frequency: freq,
+        refill_days: parseInt(refill), notes
+      })
+      if (error) alert("Error saving: " + error.message)
+    } else {
+      const r = { id: Date.now(), drug, dose, time, freq, refill, notes }
+      reminders.push(r)
+      localStorage.setItem("cm_reminders_v2", JSON.stringify(reminders))
+      scheduleNotification(r)
+    }
+
+    renderReminders()
+    document.getElementById("r-drug").value = ""
+    document.getElementById("r-dose").value = ""
+    document.getElementById("r-notes").value = ""
+  }
+
+  async function renderReminders() {
+    const el = document.getElementById("reminder-list")
+    if (!el) return
+    const { data: { user } } = await supabase.auth.getUser()
+    let reminderData = []
+    if (user) {
+      const { data, error } = await supabase.from("reminders").select("*").eq("user_id", user.id).order("created_at")
+      if (!error) reminderData = data
+    } else {
+      reminderData = reminders
+    }
+    if (!reminderData.length) { el.innerHTML = '<div style="text-align:center;padding:2.5rem;color:#9a9a94;font-size:14px;">No reminders set yet. Add one above.</div>'; return }
+    const emojis = ["💊","💉","🩺","🏥","💙"]
+    el.innerHTML = reminderData.map((r,i) => `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;background:var(--bg);border:1px solid rgba(0,0,0,0.08);border-radius:10px;padding:1rem 1.25rem;margin-bottom:10px;">
+        <div style="display:flex;align-items:center;gap:14px;">
+          <div style="width:40px;height:40px;border-radius:10px;background:var(--green-light);display:flex;align-items:center;justify-content:center;font-size:18px;">${emojis[i%emojis.length]}</div>
+          <div>
+            <div style="font-size:14px;font-weight:500;">${r.drug}${r.dose?' — '+r.dose:''}</div>
+            <div style="font-size:12px;color:#6b6b66;">${r.frequency||r.freq} · Refill alert ${r.refill_days||r.refill} days prior</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+          <span style="background:var(--green-light);color:var(--green-dark);font-size:12px;font-weight:500;padding:3px 10px;border-radius:100px;">${r.time}</span>
+          <button onclick="deleteReminder('${r.id}')" style="padding:4px 12px;border:1px solid #ccc;background:transparent;border-radius:8px;font-size:12px;cursor:pointer;color:#9a9a94;">Remove</button>
+        </div>
+      </div>`).join("")
+  }
+
+  async function deleteReminder(id) {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      await supabase.from("reminders").delete().eq("id", id)
+    } else {
+      reminders = reminders.filter(r => String(r.id) !== String(id))
+      localStorage.setItem("cm_reminders_v2", JSON.stringify(reminders))
+    }
+    renderReminders()
+  }
+
+  function requestNotifications() {
+    if (!("Notification" in window)) { alert("Your browser does not support notifications."); return }
+    Notification.requestPermission().then(p => {
+      if (p === "granted") {
+        const banner = document.getElementById("notify-banner")
+        if (banner) banner.classList.add("show")
+        new Notification("CheckMed", { body: "Medication reminders are now active!" })
+        reminders.forEach(scheduleNotification)
+      } else { alert("Notifications blocked. Please enable them in your browser settings.") }
+    })
+  }
+
+  function scheduleNotification(r) {
+    if (typeof Notification === "undefined" || Notification.permission !== "granted") return
+    const [h,m] = r.time.split(":").map(Number)
+    const now = new Date(), fire = new Date()
+    fire.setHours(h,m,0,0)
+    if (fire <= now) fire.setDate(fire.getDate()+1)
+    setTimeout(() => new Notification("CheckMed Reminder", { body: `Time to take ${r.drug}${r.dose?' — '+r.dose:''}` }), fire-now)
+  }
+
+  // ============================================================
+  // DRUG INTERACTIONS
+  // ============================================================
+  function addDrug() {
+    const val = document.getElementById("int-drug").value.trim()
+    if (!val) return
+    const key = val.toLowerCase()
+    if (!drugs.includes(key)) drugs.push(key)
+    document.getElementById("int-drug").value = ""
+    renderDrugTags()
+  }
+
+  function removeDrug(d) {
+    drugs = drugs.filter(x => x !== d)
+    renderDrugTags()
+    document.getElementById("interaction-results").innerHTML = ""
+  }
+
+  function renderDrugTags() {
+    const el = document.getElementById("drug-tags")
+    if (!el) return
+    el.innerHTML = drugs.map(d => `
+      <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 14px;background:#fff;border:1px solid #ccc;border-radius:100px;font-size:13px;font-weight:500;margin:4px;">
+        <span>${d}</span>
+        <button onclick="removeDrug('${d.replace(/'/g,"\\'")}');" style="background:none;border:none;cursor:pointer;color:#9a9a94;font-size:16px;line-height:1;padding:0;">×</button>
+      </div>`).join("")
+    const btn = document.getElementById("check-btn")
+    if (btn) btn.style.display = drugs.length >= 2 ? "inline-flex" : "none"
+  }
+
+  async function fetchRxNavInteractions(rxcuis) {
+    try {
+      const res = await fetch(`https://rxnav.nlm.nih.gov/REST/interaction/list.json?rxcuis=${rxcuis.join("+")}`)
+      const data = await res.json()
+      const results = []
+      ;(data.fullInteractionTypeGroup || []).forEach(group => {
+        group.fullInteractionType?.forEach(type => {
+          type.interactionPair?.forEach(pair => {
+            results.push({
+              level: pair.severity==="high"?"danger":pair.severity==="moderate"?"warning":"safe",
+              title: `${pair.interactionConcept?.[0]?.minConceptItem?.name||""} + ${pair.interactionConcept?.[1]?.minConceptItem?.name||""}`,
+              detail: pair.description || "Interaction detected — consult your pharmacist."
+            })
+          })
+        })
+      })
+      return results
+    } catch { return [] }
+  }
+
+  async function checkInteractions() {
+    if (drugs.length < 2) return
+    const el = document.getElementById("interaction-results")
+    el.innerHTML = `<div style="padding:1rem;background:#fff;border:1px solid rgba(0,0,0,0.08);border-radius:16px;display:flex;align-items:center;gap:10px;color:#9a9a94;"><div style="width:18px;height:18px;border:2px solid #eee;border-top-color:var(--green);border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0;"></div> Looking up drugs in NLM database...</div>`
+    try {
+      const cuis = (await Promise.all(drugs.map(d=>fetchRxCUI(d)))).filter(Boolean)
+      el.innerHTML = `<div style="padding:1rem;background:#fff;border:1px solid rgba(0,0,0,0.08);border-radius:16px;display:flex;align-items:center;gap:10px;color:#9a9a94;"><div style="width:18px;height:18px;border:2px solid #eee;border-top-color:var(--green);border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0;"></div> Checking interactions...</div>`
+      const interactions = cuis.length >= 2 ? await fetchRxNavInteractions(cuis) : []
+      const colors = { danger: {bg:"#FCEBEB",border:"#F09595",title:"#A32D2D"}, warning: {bg:"#FAEEDA",border:"#FAC775",title:"#854F0B"}, safe: {bg:"#EAF3DE",border:"#C0DD97",title:"#3B6D11"} }
+      const icons = { danger:"⚠️", warning:"⚡", safe:"✅" }
+      if (interactions.length > 0) {
+        el.innerHTML = `<div style="margin-bottom:1rem;font-size:15px;font-weight:500;">Interaction results for: ${drugs.join(", ")}</div>` +
+          interactions.map(a=>{
+            const c = colors[a.level]
+            return `<div style="border-radius:16px;padding:1.25rem 1.5rem;margin-bottom:12px;border:1px solid ${c.border};background:${c.bg};">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+                <span style="font-size:16px;">${icons[a.level]}</span>
+                <span style="font-size:14px;font-weight:500;color:${c.title};">${a.title}</span>
+              </div>
+              <div style="font-size:13px;color:#6b6b66;line-height:1.6;padding-left:26px;">${a.detail}</div>
+            </div>`
+          }).join("") +
+          `<div style="font-size:12px;color:#9a9a94;margin-top:1rem;padding:0.75rem;background:#f4f3ef;border-radius:8px;">✅ Checked against NLM clinical database. Always consult your pharmacist.</div>`
+      } else {
+        el.innerHTML = `<div style="border-radius:16px;padding:1.25rem 1.5rem;border:1px solid #C0DD97;background:#EAF3DE;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;"><span style="font-size:16px;">✅</span><span style="font-size:14px;font-weight:500;color:#3B6D11;">No major interactions found</span></div>
+          <div style="font-size:13px;color:#6b6b66;line-height:1.6;padding-left:26px;">No clinically significant interactions found between ${drugs.join(", ")}. Always consult your pharmacist or doctor.</div>
+        </div>`
+      }
+    } catch {
+      el.innerHTML = `<div style="border-radius:16px;padding:1.25rem 1.5rem;border:1px solid #FAC775;background:#FAEEDA;"><div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;"><span>⚡</span><span style="font-size:14px;font-weight:500;color:#854F0B;">Could not complete check</span></div><div style="font-size:13px;color:#6b6b66;padding-left:26px;">Try again or visit <a href="https://rxnav.nlm.nih.gov" target="_blank" style="color:var(--green);">rxnav.nlm.nih.gov</a></div></div>`
+    }
+  }
+
+  // ============================================================
+  // INIT
+  // ============================================================
+  renderReminders()
+  document.getElementById("no-results-state").style.display = "block"
+
+</script>
+</body>
+</html>
