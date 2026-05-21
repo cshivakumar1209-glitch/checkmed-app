@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CheckMed — Compare Drug Prices Across Insurers, PBMs & Manufacturers</title>
+  <meta name="description" content="CheckMed — Free drug price comparison tool." />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
+  
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a class="logo" href="#" onclick="showTab('home');return false;">Check<span>Med</span></a>
+    <div class="nav-links">
+      <a onclick="showTab('home')">Home</a>
+      <a onclick="showTab('reminders')">Reminders</a>
+      <a onclick="showTab('interactions')">Drug checker</a>
+      <a onclick="showTab('about')">About</a>
+      <a class="nav-cta" onclick="showTab('home');document.getElementById('drug-search').focus();">Compare prices</a>
+    </div>
+  </div>
+</nav>
+
+<div class="tab-bar">
+  <div class="tab active" id="tab-home" onclick="showTab('home')">Price comparison</div>
+  <div class="tab" id="tab-reminders" onclick="showTab('reminders')">Medication reminders</div>
+  <div class="tab" id="tab-interactions" onclick="showTab('interactions')">Drug interactions</div>
+  <div class="tab" id="tab-about" onclick="showTab('about')">About</div>
+</div>
+
+<div class="section active" id="sec-home">
+  <div class="hero">
+    <div class="hero-badge">Free · No account needed · Updated daily</div>
+    <h1>Compare your medication<br>prices. <em>Instantly.</em></h1>
+    <p>See what insurers, PBMs, and drug manufacturers actually charge for your prescriptions — side by side, in plain English.</p>
+
+    <div class="search-wrap">
+      <input type="text" id="drug-search" placeholder="Search a medication (e.g. Metformin, Ozempic...)" onkeydown="if(event.key==='Enter')searchDrug()" />
+      <button class="btn-secondary" onclick="scanPrescription()">📷 Scan</button>
+      <button class="btn-primary" onclick="searchDrug()">Compare prices</button>
+    </div>
+
+    <div class="quick-pills">
+      <span class="pill" onclick="quickSearch('Metformin')">Metformin</span>
+      <span class="pill" onclick="quickSearch('Atorvastatin')">Atorvastatin</span>
+      <span class="pill" onclick="quickSearch('Ozempic')">Ozempic</span>
+      <span class="pill" onclick="quickSearch('Lisinopril')">Lisinopril</span>
+      <span class="pill" onclick="quickSearch('Humira')">Humira</span>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-num">2,400+</div><div class="stat-label">Medications tracked</div></div>
+    <div class="stat-card"><div class="stat-num">38</div><div class="stat-label">Insurance plans compared</div></div>
+    <div class="stat-card"><div class="stat-num">12</div><div class="stat-label">PBMs included</div></div>
+    <div class="stat-card"><div class="stat-num">43%</div><div class="stat-label">Avg savings found</div></div>
+  </div>
+
+  <div class="page-grid">
+    <div class="card" id="insurance">
+      <div class="card-title">Insurance plan steps</div>
+      <div class="steps">
+        <div class="step">1. Insurance type</div>
+        <div class="step">2. Plan stage</div>
+        <div class="step">3. Member ID</div>
+        <div class="step">4. Coverage details</div>
+      </div>
+      <div class="row">
+        <div>
+          <label class="label">Insurance type</label>
+          <select>
+            <option>Private</option>
+            <option>Medicare</option>
+            <option>Medicaid</option>
+            <option>No insurance</option>
+          </select>
+        </div>
+        <div>
+          <label class="label">Plan stage</label>
+          <select>
+            <option>Provider</option>
+            <option>Plan name</option>
+            <option>Member number</option>
+            <option>Coverage tier</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label class="label">Insurance member ID</label>
+          <input class="input" placeholder="Enter member number">
+        </div>
+        <div>
+          <label class="label">Coverage notes</label>
+          <input class="input" placeholder="Copay, deductible, tier">
+        </div>
+      </div>
+      <p class="muted">This section helps users pick the right insurance stage before showing the final drug price.</p>
+    </div>
+
+    <div class="card" id="signup">
+      <div class="card-title">Create account</div>
+      <div class="row">
+        <div>
+          <label class="label">Full name</label>
+          <input class="input" placeholder="Your name">
+        </div>
+        <div>
+          <label class="label">Phone number</label>
+          <input class="input" placeholder="Your phone">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label class="label">Email address</label>
+          <input class="input" placeholder="name@example.com">
+        </div>
+        <div>
+          <label class="label">Insurance number</label>
+          <input class="input" placeholder="Policy or member ID">
+        </div>
+      </div>
+      <div class="chips" style="margin-top:14px;">
+        <div class="chip">Save search history</div>
+        <div class="chip">Get reminders</div>
+        <div class="chip">Track refill alerts</div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;">
+        <button class="btn-primary">Sign up</button>
+        <button class="btn-secondary">Continue as guest</button>
+      </div>
+    </div>
+
+    <div class="card" id="pricing">
+      <div class="card-title">Prices without insurance</div>
+      <p class="muted">If the user does not have insurance, show cash prices and savings options side by side.</p>
+      <div class="list">
+        <div class="option"><div><strong>Cash price</strong><div class="muted">Retail pharmacy price</div></div><div class="price">$24.00</div></div>
+        <div class="option"><div><strong>Discount card</strong><div class="muted">GoodRx / coupons</div></div><div class="price">$9.00</div></div>
+        <div class="option"><div><strong>Manufacturer help</strong><div class="muted">Savings or assistance program</div></div><div class="price">$0.00</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Best plan suggestion</div>
+      <p class="muted">For uninsured users, recommend the cheapest option. For insured users, show whether the pharmacy coupon or the insurance copay is lower.</p>
+      <div class="chips">
+        <div class="chip">Best for uninsured</div>
+        <div class="chip">Best insurance copay</div>
+        <div class="chip">Most savings</div>
+        <div class="chip">Scan a pill bottle</div>
+      </div>
+      <div style="margin-top:16px;padding:16px;border-radius:14px;background:var(--green-light);color:var(--green-dark);font-weight:700;">
+        Recommended: use the discount card price if you have no insurance.
+      </div>
+    </div>
+  </div>
+
+  <div class="page-content">
+    <div class="results-container" id="results-area" style="display:none;">
+      <div class="results-header">
+        <div>
+          <div class="results-title" id="results-title">Showing results for Metformin 500mg — 30-day supply</div>
+          <div class="results-sub">Prices are estimates · always verify with your pharmacy</div>
+        </div>
+        <div class="filter-row">
+          <button class="filter-btn active" onclick="filterResults('all',this)">All sources</button>
+          <button class="filter-btn" onclick="filterResults('pbm',this)">PBMs only</button>
+          <button class="filter-btn" onclick="filterResults('insurance',this)">Insurance</button>
+          <button class="filter-btn" onclick="filterResults('manufacturer',this)">Manufacturer</button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="price-table">
+          <thead>
+            <tr>
+              <th>Provider / plan</th>
+              <th>Type</th>
+              <th>Monthly price</th>
+              <th>Your copay</th>
+              <th>Savings vs list</th>
+              <th>Coverage notes</th>
+            </tr>
+          </thead>
+          <tbody id="price-tbody"></tbody>
+        </table>
+      </div>
+
+      <div class="ai-box">
+        <div class="ai-box-header">
+          <div class="ai-icon">
+            <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+          </div>
+          <div>
+            <div class="ai-box-title">AI suggestion</div>
+            <div class="ai-box-sub">Powered by Claude</div>
+          </div>
+        </div>
+        <div class="ai-content" id="ai-content">
+          <div class="loading"><div class="spinner"></div> Analyzing prices and alternatives...</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="no-results-state" class="results-container">
+      <div class="empty-hero">
+        <div class="empty-icon">💊</div>
+        <h2>Search for a medication above</h2>
+        <p>We'll show you prices from insurers, PBMs, and manufacturer programs — plus AI suggestions for saving more.</p>
+      </div>
+
+      <div class="edu-grid">
+        <div class="edu-card">
+          <div class="edu-icon">🏦</div>
+          <div class="edu-title">What is a PBM?</div>
+          <div class="edu-text">Pharmacy Benefit Managers are powerful middlemen who negotiate drug prices between insurers and pharmacies — but don't always pass the savings on to you.</div>
+          <a class="edu-link" onclick="showTab('about')">Learn how PBMs work →</a>
+        </div>
+        <div class="edu-card">
+          <div class="edu-icon">📋</div>
+          <div class="edu-title">How insurance tiers work</div>
+          <div class="edu-text">Your plan places every drug into a tier — from cheap generics (Tier 1) to expensive specialty drugs (Tier 4+). Knowing your tier helps you pay a lot less.</div>
+          <a class="edu-link" onclick="showTab('about')">Understand tiers →</a>
+        </div>
+        <div class="edu-card">
+          <div class="edu-icon">🎟️</div>
+          <div class="edu-title">Manufacturer coupons</div>
+          <div class="edu-text">Drug makers offer Patient Assistance Programs that can cut costs dramatically — especially for brand-name biologics like Humira or Ozempic.</div>
+          <a class="edu-link" onclick="showTab('about')">Find assistance programs →</a>
+        </div>
+        <div class="edu-card">
+          <div class="edu-icon">💡</div>
+          <div class="edu-title">Generic vs brand-name</div>
+          <div class="edu-text">Generics contain the same active ingredient as brand-name drugs but can cost 80–90% less. Always ask your doctor if a generic is available for your medication.</div>
+          <a class="edu-link" onclick="showTab('about')">See generic options →</a>
+        </div>
+      </div>
+
+      <h2 style="font-family:'DM Serif Display',serif; font-size:22px; margin-bottom:1rem;">The 3 players that control your drug prices</h2>
+      <div class="players-grid" style="margin-bottom:3rem;">
+        <div class="player-card">
+          <div class="player-type">PBM — Pharmacy Benefit Manager</div>
+          <div class="player-title">The middlemen</div>
+          <div class="player-text">PBMs sit between insurance companies and pharmacies. They negotiate rebates from drug manufacturers and decide which drugs are covered — but often keep a portion of those savings.</div>
+          <ul class="player-list">
+            <li>CVS Caremark</li>
+            <li>Express Scripts (Cigna)</li>
+            <li>OptumRx (UnitedHealth)</li>
+            <li>GoodRx (discount card)</li>
+          </ul>
+        </div>
+        <div class="player-card">
+          <div class="player-type">Insurance Companies</div>
+          <div class="player-title">The plan makers</div>
+          <div class="player-text">Your health insurer determines which drugs are "covered" and at what copay level. They organize medications into formulary tiers — the higher the tier, the more you pay.</div>
+          <ul class="player-list">
+            <li>Blue Cross Blue Shield</li>
+            <li>UnitedHealthcare</li>
+            <li>Aetna / Cigna / Humana</li>
+            <li>Medicare Part D plans</li>
+          </ul>
+        </div>
+        <div class="player-card">
+          <div class="player-type">Drug Manufacturers</div>
+          <div class="player-title">The price setters</div>
+          <div class="player-text">Pharmaceutical companies set the original list price of drugs. Many offer Patient Assistance Programs that provide free or heavily discounted medications based on income.</div>
+          <ul class="player-list">
+            <li>Novo Nordisk (Ozempic)</li>
+            <li>AbbVie (Humira, Skyrizi)</li>
+            <li>Pfizer (Eliquis, Xeljanz)</li>
+            <li>200+ programs tracked</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding: 0 2rem 3rem; max-width:960px; margin:0 auto;">
+    <div class="cta-section">
+      <h2>Ready to find a better price?</h2>
+      <p>Search your medication and see all your options side by side — free, in seconds.</p>
+      <button class="btn-white" onclick="showTab('home');document.getElementById('drug-search').focus()">Compare prices now</button>
+    </div>
+  </div>
+</div>
+
+<div class="section" id="sec-reminders">
+  <div class="page-content">
+    <div class="page-title">Medication reminders</div>
+    <div class="page-sub">Set daily reminders for your medications and get alerts when it's time to refill or when sale prices are available.</div>
+
+    <div class="notify-banner" id="notify-banner">
+      Notifications enabled! You'll get browser reminders at the times you set.
+    </div>
+
+    <div class="card">
+      <div class="card-title">Add a new reminder</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Medication name</label>
+          <input class="form-input" id="r-drug" placeholder="e.g. Metformin 500mg" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Dosage</label>
+          <input class="form-input" id="r-dose" placeholder="e.g. 1 tablet" />
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Reminder time</label>
+          <input class="form-input" type="time" id="r-time" value="08:00" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Frequency</label>
+          <select class="form-input" id="r-freq">
+            <option>Once daily</option>
+            <option>Twice daily</option>
+            <option>Three times daily</option>
+            <option>With meals</option>
+            <option>Weekly</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Refill alert (days before running out)</label>
+          <input class="form-input" type="number" id="r-refill" value="7" min="1" max="30" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notes (optional)</label>
+          <input class="form-input" id="r-notes" placeholder="e.g. Take with food, avoid grapefruit" />
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn-primary" onclick="addReminder()">Add reminder</button>
+        <button class="btn-secondary" onclick="requestNotifications()">Enable notifications</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Your reminders</div>
+      <div class="reminder-list" id="reminder-list">
+        <div class="empty-state">No reminders set yet. Add one above.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Medication sale alerts</div>
+      <div class="sale-card">
+        <div class="sale-icon">📉</div>
+        <div class="sale-info">
+          <div class="sale-name">Metformin 500mg (GoodRx)</div>
+          <div class="sale-detail">Price dropped at CVS Pharmacy · Expires in 3 days</div>
+        </div>
+        <div class="sale-price">
+          <div class="sale-new">$3.80</div>
+          <div class="sale-old">$4.50</div>
+          <div class="sale-pct">-16%</div>
+        </div>
+      </div>
+      <div class="sale-card">
+        <div class="sale-icon">💰</div>
+        <div class="sale-info">
+          <div class="sale-name">Atorvastatin 20mg (OptumRx)</div>
+          <div class="sale-detail">New mail-order discount available · Save on 90-day supply</div>
+        </div>
+        <div class="sale-price">
+          <div class="sale-new">$22.00</div>
+          <div class="sale-old">$36.00</div>
+          <div class="sale-pct">-39%</div>
+        </div>
+      </div>
+      <div class="sale-card">
+        <div class="sale-icon">🎟️</div>
+        <div class="sale-info">
+          <div class="sale-name">Ozempic (Novo Nordisk coupon)</div>
+          <div class="sale-detail">New savings card available · Cap at $99/month for insured</div>
+        </div>
+        <div class="sale-price">
+          <div class="sale-new">$99.00</div>
+          <div class="sale-old">$892.00</div>
+          <div class="sale-pct">-89%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" id="sec-interactions">
+  <div class="page-content">
+    <div class="page-title">Drug interaction checker</div>
+    <div class="page-sub">Enter all the medications you take. Our AI will flag dangerous combinations, dosage concerns, and interactions you should discuss with your doctor.</div>
+
+    <div class="card">
+      <div class="card-title">Your medications</div>
+      <div style="display:flex; gap:10px; margin-bottom:1rem;">
+        <input class="form-input" id="int-drug" placeholder="Add a medication (e.g. Warfarin, Aspirin, Metformin...)" onkeydown="if(event.key==='Enter')addDrug()" style="flex:1;" />
+        <button class="btn-primary" onclick="addDrug()">Add</button>
+      </div>
+      <div class="drug-tag-row" id="drug-tags"></div>
+      <button class="btn-primary" id="check-btn" style="display:none;" onclick="checkInteractions()">Check interactions with AI →</button>
+    </div>
+
+    <div id="interaction-results"></div>
+
+    <div class="card" style="border-color:#FAC775; background:#FAEEDA;">
+      <p style="font-size:13px; color:#633806; line-height:1.6;">
+        <strong>Disclaimer:</strong> This tool is for informational purposes only. It does not replace professional medical advice, diagnosis, or treatment. Always consult your doctor or pharmacist before starting, stopping, or changing any medications.
+      </p>
+    </div>
+  </div>
+</div>
+
+<div class="section" id="sec-about">
+  <div class="about-hero">
+    <h1>About CheckMed</h1>
+    <p>Helping patients navigate the confusing world of drug pricing — free, always.</p>
+  </div>
+  <div class="page-content" style="padding-top:2.5rem;">
+    <div class="edu-grid" style="margin-bottom:2rem;">
+      <div class="edu-card">
+        <div class="edu-icon">🎯</div>
+        <div class="edu-title">Our mission</div>
+        <div class="edu-text">CheckMed was built to give patients the same pricing information that insurers, PBMs, and pharmacies already have — so you can make smarter decisions and pay less at the pharmacy.</div>
+      </div>
+      <div class="edu-card">
+        <div class="edu-icon">🔒</div>
+        <div class="edu-title">Privacy first</div>
+        <div class="edu-text">We don't require an account or store your searches. CheckMed is not affiliated with any insurer, PBM, or drug manufacturer. We have no financial incentive to promote any specific option.</div>
+      </div>
+      <div class="edu-card">
+        <div class="edu-icon">📊</div>
+        <div class="edu-title">Data sources</div>
+        <div class="edu-text">Pricing data is sourced from publicly available formulary files, CMS datasets, manufacturer websites, and GoodRx pricing APIs. Prices are updated daily and shown as estimates.</div>
+      </div>
+      <div class="edu-card">
+        <div class="edu-icon">🤖</div>
+        <div class="edu-title">AI-powered suggestions</div>
+        <div class="edu-text">Our AI suggestion engine uses Claude (by Anthropic) to analyze prices and suggest cheaper alternatives, generic substitutes, and assistance programs specific to your medication.</div>
+      </div>
+    </div>
+
+    <h2 style="font-family:'DM Serif Display',serif; font-size:22px; margin-bottom:1.5rem;">How it works</h2>
+    <div class="card" style="margin-bottom:1.5rem;">
+      <div style="display:flex; gap:1.5rem; align-items:flex-start;">
+        <div style="width:36px; height:36px; border-radius:50%; background:var(--green); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:500; flex-shrink:0;">1</div>
+        <div>
+          <div class="edu-title">Search your medication</div>
+          <div class="edu-text">Type the name of your prescription drug. We cover over 2,400 medications — from common generics like Metformin to specialty biologics like Humira and Ozempic. Search by brand or generic name.</div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:1.5rem;">
+      <div style="display:flex; gap:1.5rem; align-items:flex-start;">
+        <div style="width:36px; height:36px; border-radius:50%; background:var(--green); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:500; flex-shrink:0;">2</div>
+        <div>
+          <div class="edu-title">See prices side by side</div>
+          <div class="edu-text">CheckMed shows you prices across every major source — insurance plans, PBMs, and manufacturer assistance programs. Filter by type and use the AI suggestion panel to spot the best deal.</div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:3rem;">
+      <div style="display:flex; gap:1.5rem; align-items:flex-start;">
+        <div style="width:36px; height:36px; border-radius:50%; background:var(--green); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:500; flex-shrink:0;">3</div>
+        <div>
+          <div class="edu-title">Take action and save</div>
+          <div class="edu-text">Use our guides to apply for a patient assistance program, ask your doctor for a generic alternative, or show the comparison directly to your pharmacist. Small changes can save hundreds a year.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <a class="logo" href="#" onclick="showTab('home');return false;">Check<span>Med</span></a>
+      <p class="footer-desc">Helping patients compare prescription drug prices — free, always. Not affiliated with any insurer, PBM, or drug manufacturer.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Pages</h4>
+      <ul>
+        <li><a onclick="showTab('home')">Home</a></li>
+        <li><a onclick="showTab('about')">How it works</a></li>
+        <li><a onclick="showTab('about')">PBMs explained</a></li>
+        <li><a onclick="showTab('reminders')">Medication reminders</a></li>
+        <li><a onclick="showTab('interactions')">Drug interactions</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Legal</h4>
+      <ul>
+        <li><a href="#">Privacy policy</a></li>
+        <li><a href="#">Terms of use</a></li>
+        <li><a href="#">Disclaimer</a></li>
+        <li><a href="#">Contact us</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    © 2026 CheckMed. Prices shown are estimates for educational and informational purposes only. Always verify pricing with your pharmacy, insurance provider, or manufacturer before making any medical or financial decisions. CheckMed does not provide medical advice.
+  </div>
+</footer>
+
+
+<!-- ============================================================ -->
+<!-- SCRIPTS — Load in this exact order                           -->
+<!-- ============================================================ -->
+<script src="js/config.js"></script>
+
+<script>
+  // Initialize Supabase using config
+  const supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY)
+</script>
+
+<script src="js/app.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/search.js"></script>
+<script src="js/reminders.js"></script>
+<script src="js/interactions.js"></script>
+<script src="js/scanner.js"></script>
+
+<script>
+  // Initialize app
+  renderReminders()
+  document.getElementById("no-results-state").style.display = "block"
+</script>
+
+</body>
+</html>
