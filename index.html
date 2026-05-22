@@ -1,26 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
-  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script>
-  window.OneSignalDeferred = window.OneSignalDeferred || [];
-  OneSignalDeferred.push(async function(OneSignal) {
-    await OneSignal.init({
-      appId: "7e28e1c1-ccd8-4dc5-a78c-b63b33ae0b20",
-    });
-  });
-</script>
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CheckMed — Compare Drug Prices Across Insurers, PBMs & Manufacturers</title>
   <meta name="description" content="CheckMed — Free drug price comparison tool." />
   <link rel="manifest" href="manifest.json" />
-<meta name="theme-color" content="#1D9E75" />
+  <meta name="theme-color" content="#1D9E75" />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
-  
+
+  <!-- OneSignal Push Notifications -->
+  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+  <script>
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function(OneSignal) {
+      await OneSignal.init({
+        appId: "7e28e1c1-ccd8-4dc5-a78c-b63b33ae0b20",
+      });
+    });
+  </script>
+
   <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  
+
   <!-- Styles -->
   <style>
     :root{
@@ -444,9 +446,8 @@
       .option{flex-direction:column;align-items:flex-start}
     }
 
-</style>
+  </style>
 </head>
-<body>
 <body>
 
 <nav>
@@ -945,37 +946,25 @@
 </footer>
 
 
-<!-- ============================================================ -->
-<!-- SCRIPTS — Load in this exact order                           -->
-<!-- ============================================================ -->
+<!-- Scripts - Load in order -->
 <script src="js/config.js"></script>
-
 <script>
-  // Initialize Supabase using config
   const supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY)
 </script>
-
 <script src="js/app.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/search.js"></script>
 <script src="js/reminders.js"></script>
 <script src="js/interactions.js"></script>
 <script src="js/scanner.js"></script>
-
 <script>
-  // Initialize app
+  // Service Worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js')
+  }
+  // Init
   renderReminders()
   document.getElementById("no-results-state").style.display = "block"
 </script>
-</script>
-
-    <script>
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js')
-          .then(() => console.log('✅ Service Worker registered'))
-          .catch(err => console.log('SW error:', err))
-      }
-    </script>
-
 </body>
 </html>
