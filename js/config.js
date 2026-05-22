@@ -4,10 +4,9 @@
 // ============================================================
 
 const CONFIG = {
-
   // Supabase — get from supabase.com → Project Settings → API
-  SUPABASE_URL: 'YOUR_SUPABASE_URL_HERE',
-  SUPABASE_KEY: 'YOUR_SUPABASE_ANON_KEY_HERE',
+  SUPABASE_URL: 'https://yfnvhekgkhblgrngdtxi.supabase.co/rest/v1/',
+  SUPABASE_KEY: 'sb_publishable_Da_tq3PrKmNirn9-ZQaS_g_EZzGwT4r',
 
   // Your Render backend URL
   BACKEND_URL: 'https://checkmed-backend-1.onrender.com',
@@ -21,4 +20,6 @@ const CONFIG = {
   // Anthropic Claude — paste here when you get it
   ANTHROPIC_API_KEY: '',
 
+  // OneSignal — push notifications
+  ONESIGNAL_APP_ID: '7e28e1c1-ccd8-4dc5-a78c-b63b33ae0b20',
 }
